@@ -1,24 +1,36 @@
+# -*- coding:UTF-8 -*-
+
 import RPi.GPIO as GPIO
-from card_main import Card
-from mfrc522 import SimpleMFRC522
-reader = SimpleMFRC522()
+import time
 
 GPIO.setmode(GPIO.BCM)
 
-GPIO.setup(38, GPIO.IN, pull_up_dwon=GPIO.PUD_DOWN)
-GPIO.setup(39, GPIO.OUT)
+GPIO.setup(24, GPIO.IN, pull_up_dwon=GPIO.PUD_DOWN)
+GPIO.setup(25, GPIO.OUT)
+
+ledStatus = True
 
 
 def my_callback(channel):
-    id, text = reader.read()
-    Card().run
+    print("button pressed!")
+    global ledStatus
+    ledStatus = not ledStatus
+    if ledStatus:
+        GPIO.output(25, GPIO.HIGH)
+        pass
+    else:
+        GPIO.output(25, GPIO.LOW)
+        pass
+    pass
 
 
-GPIO.add_event_detect(38, GPIO.RISING, callback=my_callback, bouncetime=200)
+GPIO.add_event_detect(24, GPIO.RISING, callback=my_callback)
 
 while True:
     try:
-        Card().run()
+        print("I'm working...")
+        time.sleep(5)
+        pass
     except KeyboardInterrupt:
         break
         pass
