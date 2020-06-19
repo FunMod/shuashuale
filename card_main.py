@@ -66,6 +66,8 @@ class Card(object):  # 定义Card类
         ans = self.listen()
         return ans
 
+# TODO 讲语音识别结果转换为拼音字母，可以提高容错率
+
     def run(self):  # 执行程序的方法
         # 接受来自NFC的信息并判断下一步操作:选择模式
         while True:
