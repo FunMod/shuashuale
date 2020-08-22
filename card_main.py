@@ -62,7 +62,7 @@ def tr_digit_to_zn(digit):  # 数字转汉字函数
     if res_zn.startswith('一十'):
         res_zn = res_zn[1:]
 
-    if res_zn.startswith('二') and res_zn[1] in ['万','亿']:
+    if res_zn.startswith('二') and res_zn[1] in ['万', '亿']:
         res_zn = '两' + res_zn[1:]
 
     return res_zn
