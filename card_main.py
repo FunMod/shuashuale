@@ -1,6 +1,7 @@
 from mfrc522 import SimpleMFRC522
 import pymysql
 import os
+import random
 from gpiozero import Button
 import RPi.GPIO as GPIO
 reader = SimpleMFRC522()
@@ -37,6 +38,10 @@ class Card(object):  # 定义Card类
         cmd = "mplayer " + text
         os.system(cmd)
 
+    def tts(text):  # TTS文本合成语音
+        cmd = "tts_sample " + text
+        os.system(cmd)
+
     def Butt(self):  # 按钮方法
         button = Button(2)
 
@@ -57,6 +62,30 @@ class Card(object):  # 定义Card类
 
     def rec(self):
         os.system("arecord -d 3 -r 16000 -c 1 -t wav -f S16_LE temp.wav")
+
+    def calculate(self, f):
+        sym = ['＋', '－', '×', '÷']
+        # f = random.randint(0, 3)
+        n1 = random.randint(1, 20)
+        n2 = random.randint(1, 20)
+        result = 0
+        if f == 0:  # 加法
+            result = n1 + n2
+        elif f == 1:  # 减法，要先比较大小，防止输出负数
+            n1, n2 = max(n1, n2), min(n1, n2)
+            result = n1 - n2
+        elif f == 2:  # 乘法
+            result = n1 * n2
+        elif f == 3:  # 除法，要比较大小，并循环取整除
+            n1, n2 = max(n1, n2), min(n1, n2)
+            while n1 % n2 != 0:
+                n1 = random.randint(1, 10)
+                n2 = random.randint(1, 10)
+                n1, n2 = max(n1, n2), min(n1, n2)
+            result = int(n1 / n2)
+        print(n1, sym[f], n2, '= ', end='')
+        question = str(n1) + '+' + str(n2) + '='
+        return (question, result)
 
     def wrong(self):
         self.read('voice/wrong.wav')
@@ -81,6 +110,9 @@ class Card(object):  # 定义Card类
                 print('已选择学习模式')
                 #  朗读模式：刷卡直接输出语音
                 self.read(self.con_get(text[0:3]))
+            elif 'calculate' in text:
+                self.calculate(text[7])
+                self.tts(self.calculate(text[7])[0])
             elif 'guess' in text:  # 语音答题功能
                 self.cursor.execute("""select * from card_guess where id >= 
                 ((select max(id) from card_guess)-
