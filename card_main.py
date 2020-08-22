@@ -7,6 +7,67 @@ import RPi.GPIO as GPIO
 reader = SimpleMFRC522()
 
 
+def tr_digit_to_zn(digit):  # 数字转汉字函数
+    # 940,2400,0452
+    digit = str(digit)
+    length = len(digit)
+    digit = digit[::-1]
+    split = []
+    sp_nums = range(0, length, 4)
+    for i in sp_nums:
+        split.append(digit[i: i + 4][::-1].zfill(4))
+    # print(split)
+    d_digit_to_zn = {
+        0: "零",
+        1: "一",
+        2: "二",
+        3: "三",
+        4: "四",
+        5: "五",
+        6: "六",
+        7: "七",
+        8: "八",
+        9: "九",
+    }
+    res_zn_list = []
+    split_count = len(split)
+    for i, e in enumerate(split):
+        zn = ''
+        for j, each in enumerate(e):
+            if each == '0':
+                if j == 0 and i == split_count - 1:
+                    pass
+                elif e[j - 1] == '0':
+                    pass
+                elif e[j:].strip('0'):
+                    zn += '零'
+            else:
+                zn += d_digit_to_zn[int(each)] + {0: '千', 1: '百', 2: '十', 3: ''}[j]
+        zn = zn + {0: '', 1: '万', 2: '亿'}[i]
+        res_zn_list.append(zn)
+    res_zn_list.reverse()
+    res_zn = ''.join(res_zn_list)
+    # print(res_zn)
+
+    res_zn = [e for e in res_zn]
+    for i, e in enumerate(res_zn):
+        if e in '百千':
+            try:
+                if res_zn[i - 1] == '二':
+                    res_zn[i - 1] = '两'
+            except:
+                pass
+    res_zn = ''.join(res_zn)
+
+    if res_zn.startswith('一十'):
+        res_zn = res_zn[1:]
+
+    if res_zn.startswith('二') and res_zn[1] in ['万','亿']:
+        res_zn = '两' + res_zn[1:]
+
+    return res_zn
+
+
 class Card(object):  # 定义Card类
     def __init__(self):
         self.conn = pymysql.connect(  # 连接MySQL数据库
@@ -38,7 +99,7 @@ class Card(object):  # 定义Card类
         cmd = "mplayer " + text
         os.system(cmd)
 
-    def tts(text):  # TTS文本合成语音
+    def tts(self, text):  # TTS文本合成语音
         cmd = "tts_sample " + text
         os.system(cmd)
 
@@ -66,16 +127,25 @@ class Card(object):  # 定义Card类
     def calculate(self, f):
         sym = ['＋', '－', '×', '÷']
         # f = random.randint(0, 3)
-        n1 = random.randint(1, 20)
-        n2 = random.randint(1, 20)
+        n1 = random.randint(1, 10)
+        n2 = random.randint(1, 10)
         result = 0
         if f == 0:  # 加法
             result = n1 + n2
+            n1 = tr_digit_to_zn(n1)
+            n2 = tr_digit_to_zn(n2)
+            question = n1 + '加' + n2 + '等于'
         elif f == 1:  # 减法，要先比较大小，防止输出负数
             n1, n2 = max(n1, n2), min(n1, n2)
             result = n1 - n2
+            n1 = tr_digit_to_zn(n1)
+            n2 = tr_digit_to_zn(n2)
+            question = n1 + '减' + n2 + '等于'
         elif f == 2:  # 乘法
             result = n1 * n2
+            n1 = tr_digit_to_zn(n1)
+            n2 = tr_digit_to_zn(n2)
+            question = n1 + '乘' + n2 + '等于'
         elif f == 3:  # 除法，要比较大小，并循环取整除
             n1, n2 = max(n1, n2), min(n1, n2)
             while n1 % n2 != 0:
@@ -83,9 +153,13 @@ class Card(object):  # 定义Card类
                 n2 = random.randint(1, 10)
                 n1, n2 = max(n1, n2), min(n1, n2)
             result = int(n1 / n2)
-        print(n1, sym[f], n2, '= ', end='')
-        question = str(n1) + '+' + str(n2) + '='
-        return (question, result)
+            n1 = tr_digit_to_zn(n1)
+            n2 = tr_digit_to_zn(n2)
+            question = n1 + '除' + n2 + '等于'
+        print(question)
+        result_0 = result
+        result = tr_digit_to_zn(result)
+        return (question, result, result_0)
 
     def wrong(self):
         self.read('voice/wrong.wav')
@@ -111,8 +185,19 @@ class Card(object):  # 定义Card类
                 #  朗读模式：刷卡直接输出语音
                 self.read(self.con_get(text[0:3]))
             elif 'calculate' in text:
-                self.calculate(text[7])
-                self.tts(self.calculate(text[7])[0])
+                cal = self.calculate(int(text[9]))
+                print(cal[0])
+                self.tts(cal[0])
+                self.id_get()  # 刷卡后开启答题
+                self.read('voice/ding.wav')
+                self.rec()
+                ans = self.listen()
+                print(cal[2])
+                if str(cal[2]) in ans:
+                    self.read('voice/right.wav')
+                else:
+                    self.read('voice/tips.wav')
+                    self.tts(cal[1])                              
             elif 'guess' in text:  # 语音答题功能
                 self.cursor.execute("""select * from card_guess where id >= 
                 ((select max(id) from card_guess)-
