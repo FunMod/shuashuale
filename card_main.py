@@ -125,7 +125,7 @@ class Card(object):  # 定义Card类
         os.system("arecord -d 3 -r 16000 -c 1 -t wav -f S16_LE temp.wav")
 
     def calculate(self, f):
-        sym = ['＋', '－', '×', '÷']
+        # sym = ['＋', '－', '×', '÷']
         # f = random.randint(0, 3)
         n1 = random.randint(1, 10)
         n2 = random.randint(1, 10)
