@@ -122,7 +122,7 @@ class Card(object):  # 定义Card类
             print("KeyError")
 
     def rec(self):
-        os.system("arecord -d 3 -r 16000 -c 1 -t wav -f S16_LE temp.wav")
+        os.system("arecord -d 1 -r 16000 -c 1 -t wav -f S16_LE temp.wav")
 
     def calculate(self, f):
         # sym = ['＋', '－', '×', '÷']
@@ -193,7 +193,8 @@ class Card(object):  # 定义Card类
                 self.rec()
                 ans = self.listen()
                 print(cal[2])
-                if str(cal[2]) in ans:
+                #  ans = ans + tr_digit_to_zn(ans)
+                if tr_digit_to_zn(cal[2]) or str(cal[2]) in ans:
                     self.read('voice/right.wav')
                 else:
                     self.read('voice/tips.wav')
