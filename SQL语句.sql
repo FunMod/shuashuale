@@ -15,3 +15,5 @@ res varchar(50) not null,
 primary key (id)
 );
 update card_guess set ans='其他垃圾' where id=7;
+insert into card_01 (id,name,con) values(0,'001guess','voice/007guess.wav');
+insert into card_01 (name,con) values('008','/home/pi/Documents/vs_code/voice/read008.wav');
