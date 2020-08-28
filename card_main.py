@@ -10,7 +10,7 @@ from gpiozero import Button
 reader = SimpleMFRC522()
 
 
-def kill(proc_pid):
+def kill(proc_pid):  # kill掉子进程
     process = psutil.Process(proc_pid)
     for proc in process.children(recursive=True):
         proc.kill()
@@ -113,7 +113,7 @@ class Card(object):  # 定义Card类
         cmd = "tts_sample " + text
         os.system(cmd)
 
-    def Butt(self):  # 按钮方法
+    def Butt(self):  # 按钮方法(未使用)
         button = Button(2)
 
         while True:
@@ -122,7 +122,7 @@ class Card(object):  # 定义Card类
             else:
                 pass
 
-    def listen(self):
+    def listen(self):  # 语音转文字
         os.system("./iat_sample ")
         try:
             with open("text.txt", "r") as file:
@@ -131,12 +131,10 @@ class Card(object):  # 定义Card类
         except KeyError:
             print("KeyError")
 
-    def rec(self):
+    def rec(self):  # 录音函数
         os.system("arecord -d 2 -r 16000 -c 1 -t wav -f S16_LE temp.wav")
 
-    def calculate(self, f):
-        # sym = ['＋', '－', '×', '÷']
-        # f = random.randint(0, 3)
+    def calculate(self, f):  # 加减乘除随机出题函数
         n1 = random.randint(1, 10)
         n2 = random.randint(1, 10)
         result = 0
@@ -179,26 +177,28 @@ class Card(object):  # 定义Card类
         ans = self.listen()
         return ans
 
-# TODO 将语音识别结果转换为拼音字母，可以提高容错率
+# TODO 尝试将语音识别结果转换为拼音字母，可以提高容错率
 
-    def run(self):  # 执行程序的方法
+    def run(self):  # 执行程序的主流程
         # 接受来自NFC的信息并判断下一步操作:选择模式
         while True:
             # self.read('voice/hello.wav')
             text = self.id_get()
             print(text)
-            if 'action' in text:  # 判断操作卡片指令是否为互动
+            if 'action' in text:  # 判断操作卡片指令是否为互动（未使用）
                 print('已选择互动模式')
                 pass
             elif 'read' in text:  # 判断操作卡片指令是否为朗读
                 print('已选择学习模式')
                 #  朗读模式：刷卡直接输出语音
                 p = subprocess.Popen(['mplayer', self.con_get(text[0:3])])
-                time.sleep(3)
+                # 通过建立子进程来播放音频便于中断
+                time.sleep(3)  # 延迟三秒执行下一段代码
+                # 通过刷卡来终止目前播放的内容，继续切换模式
                 text = self.id_get()
                 kill(p.pid)
                 print(text)
-            elif 'calculate' in text:
+            elif 'calculate' in text:  # 随机出题语音播放，语音答题
                 cal = self.calculate(int(text[9]))
                 print(cal[0])
                 self.tts(cal[0])
@@ -223,7 +223,7 @@ class Card(object):  # 定义Card类
 
                     self.read('voice/tips.wav')
                     self.tts(cal[1])
-            elif 'guess' in text:  # 语音答题功能
+            elif 'guess' in text:  # 语音答题功能（类似于知识问答）
                 self.cursor.execute("""select * from card_guess where id >=
                 ((select max(id) from card_guess)-
                 (select min(id) from card_guess)) * rand()
