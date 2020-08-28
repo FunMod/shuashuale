@@ -132,7 +132,7 @@ class Card(object):  # 定义Card类
             print("KeyError")
 
     def rec(self):
-        os.system("arecord -d 1 -r 16000 -c 1 -t wav -f S16_LE temp.wav")
+        os.system("arecord -d 2 -r 16000 -c 1 -t wav -f S16_LE temp.wav")
 
     def calculate(self, f):
         # sym = ['＋', '－', '×', '÷']
@@ -206,16 +206,19 @@ class Card(object):  # 定义Card类
                 self.read('voice/ding.wav')
                 self.rec()
                 ans = self.listen()
+                print('识别结果')
                 print(ans)
+                print('正确答案')
                 print(cal[2])
 # TODO 调试算数识别代码
                 try:
-                    if ans.find(cal[1]) == -1 or ans.find(str(cal[2])) == -1:
+                    if ans.find(cal[1]) > -1:
+                        self.read('voice/right.wav')
+                    elif ans.find(str(cal[2])) > -1:
+                        self.read('voice/right.wav')
+                    else:
                         self.read('voice/tips.wav')
                         self.tts(cal[1])
-
-                    else:
-                        self.read('voice/right.wav')
                 except BaseException:
 
                     self.read('voice/tips.wav')
