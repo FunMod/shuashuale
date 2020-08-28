@@ -195,14 +195,9 @@ class Card(object):  # 定义Card类
                 #  朗读模式：刷卡直接输出语音
                 p = subprocess.Popen(['mplayer', self.con_get(text[0:3])])
                 time.sleep(3)
-                # self.read(self.con_get(text[0:3]))
-                # time.sleep(3)
                 text = self.id_get()
-                # os.killpg(os.getpgid(p.pid), signal.SIGINT)
                 kill(p.pid)
                 print(text)
-                # time.sleep(1)
-                # Popen("TASKKILL /F /PID {pid} /T".format(pid=p.pid))
             elif 'calculate' in text:
                 cal = self.calculate(int(text[9]))
                 print(cal[0])
@@ -220,13 +215,13 @@ class Card(object):  # 定义Card类
                         self.tts(cal[1])
 
                     else:
-                        self.read('voice/right.wav')                
+                        self.read('voice/right.wav')
                 except BaseException:
 
                     self.read('voice/tips.wav')
-                    self.tts(cal[1])                                             
+                    self.tts(cal[1])
             elif 'guess' in text:  # 语音答题功能
-                self.cursor.execute("""select * from card_guess where id >= 
+                self.cursor.execute("""select * from card_guess where id >=
                 ((select max(id) from card_guess)-
                 (select min(id) from card_guess)) * rand()
                  + (select min(id) from card_guess) limit 1""")  # 从数据库中随机取一条谜语
@@ -259,7 +254,6 @@ def main():  # 由Card类定义主函数对象
 
 
 if __name__ == '__main__':  # 这里执行主程序main
-    # while True:  # 循环执行主函数。出现错误重新运行
     try:
         main()
     except BaseException:  # 捕获异常退出
