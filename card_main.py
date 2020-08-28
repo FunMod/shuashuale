@@ -4,7 +4,19 @@ import os
 import random
 from gpiozero import Button
 import RPi.GPIO as GPIO
+import subprocess
+# from subprocess import Popen
+import signal
+import time
+import psutil
 reader = SimpleMFRC522()
+
+
+def kill(proc_pid):
+    process = psutil.Process(proc_pid)
+    for proc in process.children(recursive=True):
+        proc.kill()
+    process.kill()
 
 
 def tr_digit_to_zn(digit):  # 数字转汉字函数
@@ -55,7 +67,7 @@ def tr_digit_to_zn(digit):  # 数字转汉字函数
             try:
                 if res_zn[i - 1] == '二':
                     res_zn[i - 1] = '两'
-            except:
+            except BaseException:
                 pass
     res_zn = ''.join(res_zn)
 
@@ -183,7 +195,16 @@ class Card(object):  # 定义Card类
             elif 'read' in text:  # 判断操作卡片指令是否为朗读
                 print('已选择学习模式')
                 #  朗读模式：刷卡直接输出语音
-                self.read(self.con_get(text[0:3]))
+                p = subprocess.Popen(['mplayer', self.con_get(text[0:3])])
+                time.sleep(3)
+                # self.read(self.con_get(text[0:3]))
+                # time.sleep(3)
+                text = self.id_get()
+                # os.killpg(os.getpgid(p.pid), signal.SIGINT)
+                kill(p.pid)
+                print(text)
+                # time.sleep(1)
+                # Popen("TASKKILL /F /PID {pid} /T".format(pid=p.pid))
             elif 'calculate' in text:
                 cal = self.calculate(int(text[9]))
                 print(cal[0])
@@ -192,13 +213,20 @@ class Card(object):  # 定义Card类
                 self.read('voice/ding.wav')
                 self.rec()
                 ans = self.listen()
+                print(ans)
                 print(cal[2])
                 #  ans = ans + tr_digit_to_zn(ans)
-                if tr_digit_to_zn(cal[2]) or str(cal[2]) in ans:
-                    self.read('voice/right.wav')
-                else:
+                try:
+                    if ans.find(cal[1]) == -1 or ans.find(str(cal[2])) == -1:
+                        self.read('voice/tips.wav')
+                        self.tts(cal[1])
+
+                    else:
+                        self.read('voice/right.wav')                
+                except BaseException:
+
                     self.read('voice/tips.wav')
-                    self.tts(cal[1])                              
+                    self.tts(cal[1])                                             
             elif 'guess' in text:  # 语音答题功能
                 self.cursor.execute("""select * from card_guess where id >= 
                 ((select max(id) from card_guess)-
