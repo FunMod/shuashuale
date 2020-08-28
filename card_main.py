@@ -213,7 +213,7 @@ class Card(object):  # 定义Card类
                 ans = self.listen()
                 print(ans)
                 print(cal[2])
-                # TODO 调试算数识别代码
+# TODO 调试算数识别代码
                 try:
                     if ans.find(cal[1]) == -1 or ans.find(str(cal[2])) == -1:
                         self.read('voice/tips.wav')
