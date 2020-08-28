@@ -1,14 +1,12 @@
-from mfrc522 import SimpleMFRC522
 import pymysql
 import os
 import random
-from gpiozero import Button
 import RPi.GPIO as GPIO
 import subprocess
-# from subprocess import Popen
-import signal
 import time
 import psutil
+from mfrc522 import SimpleMFRC522
+from gpiozero import Button
 reader = SimpleMFRC522()
 
 
@@ -181,7 +179,7 @@ class Card(object):  # 定义Card类
         ans = self.listen()
         return ans
 
-# TODO 讲语音识别结果转换为拼音字母，可以提高容错率
+# TODO 将语音识别结果转换为拼音字母，可以提高容错率
 
     def run(self):  # 执行程序的方法
         # 接受来自NFC的信息并判断下一步操作:选择模式
@@ -215,7 +213,7 @@ class Card(object):  # 定义Card类
                 ans = self.listen()
                 print(ans)
                 print(cal[2])
-                #  ans = ans + tr_digit_to_zn(ans)
+                # TODO 调试算数识别代码
                 try:
                     if ans.find(cal[1]) == -1 or ans.find(str(cal[2])) == -1:
                         self.read('voice/tips.wav')
